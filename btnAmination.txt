@@ -1,0 +1,117 @@
+void ButtonAnimationClick(object sender, EventArgs e){
+			if(preyL.Count != 0 && objective != null){
+				if(graph.vertexCount() <= 3)
+					return;
+				
+				//Variables
+				Vertex v;
+				Prey inRadar;
+				Point p;
+				Edge actualEdge;
+				Graphics g = Graphics.FromImage(bmpAnimation);
+				List<Vertex> auxPath;
+				bool lastPath = false;
+				
+				//Generacion DFS para cada presa
+				foreach (Prey preyI in preyL) {
+					preyI.pathing = graph.dfs(preyI.VActual);
+					preyI.pathing.RemoveAt(0);
+				}
+				
+				
+				while (makeAnimation()) {
+					g.Clear(Color.Transparent);
+					
+					//Movimientos de las Presas
+					foreach (Prey pI in preyL) {
+						if(pI.VActual == objective){
+							lastPath = true;
+							pI.lastMove = true;
+							pI.canMove = false;
+						}
+						if(pI.canMove){
+							if(!pI.walk()){
+								pI.selectNewPath();
+							}
+						}
+						v = pI.VActual;
+						actualEdge = v.getEdge(pI.EdgeIndex);
+						p = actualEdge.getPoint(pI.PathIndex);
+						drawCircle(p,pI.Size,bmpAnimation,Color.LimeGreen,"");
+						if(lastPath){
+							pI.lastMove= true;
+						}
+					}
+					
+					if(preyL.Count == 0)
+						lastPath = true;
+					
+					//Movimiento de los depredadores
+					foreach (Predator pI in predatorL) {
+						if(lastPath){
+							pI.lastMove = true;
+						}
+						if(pI.canMove){
+							if(!pI.walk()){
+								pI.selectNewPath();
+							}
+						}
+						v = pI.VActual;
+						actualEdge = v.getEdge(pI.EdgeIndex);
+						p = actualEdge.getPoint(pI.PathIndex);
+						if(!pI.onPrey){ //No esta En Caseria
+							inRadar = isAnybodyInRadar(pI);
+							if(inRadar == null)
+								drawRadar(p, v.getData().Radius, pI.Radar,bmpAnimation, radarColor);
+							else{ //Entra en caceria
+								drawRadar(p, v.getData().Radius, pI.Radar,bmpAnimation, detectedColor);
+								
+								auxPath = generatePath(pI.VActual.getEdge(pI.EdgeIndex).VD,inRadar.VActual.getEdge(inRadar.EdgeIndex).VD);
+								if(auxPath != null){
+									pI.onPrey = true;
+									pI.hunting = inRadar;
+									pI.pathing = auxPath;
+									for (int i = 0; i < pI.VActual.getEdgesCount(); i++) {
+										if(pI.VActual.getEdge(i).VD == pI.pathing[0])
+											pI.setEdgeIndex(i);
+									}
+									pI.setSpeed((int)Math.Round((double)pI.Speed * 1.2));
+								}
+								
+							}
+						}else { //En caseria
+							inRadar = preyL[preyL.IndexOf(pI.hunting)];
+							pI.hunting = inRadar; //Actualizamos la presa que esta en su radar
+							drawRadar(p, v.getData().Radius, pI.Radar,bmpAnimation, detectedColor);
+							pI.pathing = generatePath(pI.VActual.getEdge(pI.EdgeIndex).VD,inRadar.VActual.getEdge(inRadar.EdgeIndex).VD);
+							pI.pathCount = 0;
+							//Generamos el inicio del Path
+							for (int i = 0; i < pI.VActual.getEdgesCount(); i++) {
+								if(pI.VActual.getEdge(i).VD == pI.pathing[0])
+									pI.setEdgeIndex(i);
+							}
+							if( (pI.getPoint().X == pI.hunting.getPoint().X) && (pI.getPoint().Y == pI.hunting.getPoint().Y)){
+								preyL.Remove(pI.hunting);
+								pI.canMove = true;
+								pI.onPrey = false;
+								drawRadar(p, v.getData().Radius, pI.Radar,bmpAnimation, radarColor);
+								pI.setSpeed((pI.Speed * 5)/6);
+								foreach (Predator pJ in predatorL) {
+									if(pJ != pI){
+										if(pJ.hunting.iD == pI.hunting.iD)
+											pJ.onPrey = false;
+											pJ.hunting = null;
+											pJ.canMove;
+											pI.setSpeed((pI.Speed * 5)/6);
+									}
+								}
+								pI.hunting = null;
+							}
+						}
+						
+					}
+					pictureBoxImg.Refresh();
+				}
+			}
+		
+		}

@@ -1,0 +1,91 @@
+ARM kruskal(){
+    candidatos = aristas de G
+    ordena candidatos de menor a mayor
+    prometedor = vacio
+    cc = inicialicaCC()//comp. conexos
+    mientras(!solucion(prometedor)){
+        a{v_1, v_2} = seleccion(candidatos);
+        c_1 = buscaCCde(v_1);
+        c_2 = buscaCCde(v_2);
+        if(c_1 != c_2)
+            prometedor = prometedor U a
+            fusionaCC(c_1,c_2)
+    }
+    devover prometedor
+}
+
+-------------------------------------------------------
+
+Análisis de grafo de N vértices
+  N(N-1) aristas
+
+construcción de candidatos
+  O(N^2 - N)
+
+ordena candidatos de menor a mayor
+  O((N^2 - N)log ((N^2 - N)))
+  O(N^2log(N^2))
+inicialicaCC
+  O(N)
+
+mientras(!solucion(prometedor)
+  (N^2 - N) iteraciones
+
+              seleccion(candidatos)
+                extracccíon del primer elemento
+                  O(cte)
+
+              buscaCCde(v_1)
+                busca al vértice en los CC
+                  O(N)
+
+
+Kruskal = O(N^3)
+
+
+-----------------------------------------------------
+
+ARM Prim(Vertice v_i)
+    candidatos = aristas de v_i
+    prometedor = vacio
+    s = v_i
+    mientras(!solucion(prometedor))
+        a{v_1, v_2} = seleccion(candidatos);
+        if(factible(a,s))
+            prometedor = prometedor U a
+            if (v_1 pertenece a s)
+                s = s U v_2
+                candidatos = candidatos U aristas de v_2
+            else
+                s = s U v_1
+                candidatos = candidatos U aristas de v_1
+    devover prometedor
+
+--------------------------------------------------------
+
+Análisis de grafo de N vértices
+  N(N-1) aristas
+
+construcción de candidatos 
+    O(N-1)
+
+mientras(!solucion(prometedor))
+    (N^2 - N) iteraciones
+
+inserción Ordena
+    O(log(N^2))
+    
+seleccion(candidatos)
+    O(1)
+
+
+
+factible(a,s)
+    <O(N)
+
+
+if (v_1 pertenece a s)
+    <O(N)
+
+Complejidad de Prim
+    O(N^3)
